@@ -36,6 +36,7 @@ func openConnection() (*sql.DB, error) {
 }
 
 func exists(username string) int {
+
 	username = strings.ToLower(username)
 
 	db, err := openConnection()
@@ -53,6 +54,7 @@ func exists(username string) int {
 		fmt.Println(err)
 		return -1
 	}
+
 	for rows.Next() {
 		var ID int
 		if err := rows.Scan(&ID); err != nil {
@@ -62,6 +64,7 @@ func exists(username string) int {
 		userId = ID
 	}
 	defer rows.Close()
+
 	return userId
 }
 
@@ -76,7 +79,7 @@ func AddUser(d User) int {
 	defer db.Close()
 
 	userId := exists(d.UserName)
-	if userId == -1 {
+	if userId != -1 {
 		fmt.Println("user already exists", d.UserName)
 		return -1
 	}
@@ -112,7 +115,7 @@ func DeleteUser(id int) error {
 	}
 	defer db.Close()
 
-	statement := fmt.Sprintf(`SELECT "username" FROM "users" WHERE id = "%s"`, id)
+	statement := fmt.Sprintf(`SELECT "username" FROM "users" WHERE id = %d`, id)
 
 	rows, err := db.Query(statement)
 	if err != nil {
@@ -138,7 +141,7 @@ func DeleteUser(id int) error {
 		return err
 	}
 
-	statement = `DELETE FROM "user_data" WHERE id=$1`
+	statement = `DELETE FROM "user_data" WHERE user_id=$1`
 	_, err = db.Exec(statement, id)
 	if err != nil {
 		return err
@@ -197,11 +200,12 @@ func Update(u User) error {
 	defer db.Close()
 
 	userId := exists(u.UserName)
+
 	if userId == -1 {
 		return errors.New("User does not exist")
 	}
 
-	statement := `UPDATE "user_data" SET "name"=$1, "surname"=$2, "description"$3 where "user_id"=%4`
+	statement := `UPDATE "user_data" SET "name"=$1, "surname"=$2, "description"=$3 where "user_id"=$4`
 
 	_, err = db.Exec(statement, u.Name, u.SurName, u.Description, userId)
 	if err != nil {
