@@ -54,10 +54,12 @@ func exists(username string) int {
 		return -1
 	}
 	for rows.Next() {
-		if err := rows.Scan(&userId); err != nil {
+		var ID int
+		if err := rows.Scan(&ID); err != nil {
 			fmt.Println("Scan", err)
 			return -1
 		}
+		userId = ID
 	}
 	defer rows.Close()
 	return userId
